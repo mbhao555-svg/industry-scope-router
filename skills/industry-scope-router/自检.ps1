@@ -37,6 +37,14 @@ $hasBom = $sb.Length -ge 3 -and $sb[0] -eq 0xEF -and $sb[1] -eq 0xBB -and $sb[2]
 Assert '自检.ps1 自身为 UTF-8 带 BOM' $hasBom 'BOM 丢失会让 PowerShell 5.1 按 GBK 解析中文并语法报错'
 $skillPath = Join-Path $Root 'SKILL.md'
 Assert 'SKILL.md 存在' (Test-Path $skillPath)
+
+# ---------- A2. 技能引用的资源必须真实存在 ----------
+Write-Host '[A2] 引用资源存在性'
+# ⚠️ 这条防的是一类真错误：SKILL.md 里写了 references/xxx，但那个文件没跟着复制到技能目录
+#    —— 技能运行时会解析不到，而自检此前也不会报错
+foreach ($r in @('references\行业与产业-定义.md', 'references\两类报告-定义.md')) {
+    Assert ("引用资源存在：$r") (Test-Path (Join-Path $Root $r)) 'SKILL.md 引用了它，但文件不在技能目录里'
+}
 if (-not (Test-Path $skillPath)) { Write-Host '缺少 SKILL.md'; exit 1 }
 $skill = Read-Utf8 $skillPath
 
@@ -178,6 +186,7 @@ if ($fail -gt 0) {
 }
 Write-Host '路由判据、两种骨架与混合声明规则均通过。' -ForegroundColor Green
 exit 0
+
 
 
 
