@@ -115,6 +115,17 @@ $i35 = $skill.IndexOf('过程性标注禁写')
 $outside = if ($i34 -ge 0 -and $i35 -gt $i34) { $skill.Substring(0, $i34) + $skill.Substring($i35) } else { $skill }
 Assert '禁写表之外未出现「行业产业链」' (-not (Has $outside '行业产业链'))
 Assert '禁写表之外未出现「行业的上游」' (-not (Has $outside '行业的上游'))
+# ---------- C5. 符号容错：标题里夹 emoji 也能被定位 ----------
+Write-Host '[C5] 符号容错'
+# ⚠️ 实测：标题 ### 3.7 🔴 口径分层 里的 emoji 让 `3\.7 口径分层` 匹配失败。
+#    约定：断言引用带编号的小节标题时，须用 .{0,4} 跨过可能的符号。
+$numHeads = @([regex]::Matches($skill, '(?m)^#{3,4}\s+(\d+\.\d+)[^\r\n]*') | ForEach-Object { $_.Groups[1].Value })
+Assert "带编号的小节共 $($numHeads.Count) 个" ($numHeads.Count -ge 12)
+foreach ($h in $numHeads) {
+    $pat = [regex]::Escape($h) + '.{0,4}'
+    Assert "小节 $h 可定位（容错 emoji）" ([bool]($skill -match ($pat + '\S')))
+}
+
 # ---------- D. 三层判定判据 ----------
 Write-Host '[D] 三层判定判据'
 Assert '第一层：显式词表' ((Has $skill '第一层：显式词') -and (Has $skill '产业链、产业、供应链、价值链、上下游') -and (Has $skill '行业、行业前景、行业格局'))
@@ -206,6 +217,14 @@ Assert '含四种竞争策略情形' ((Has $skill '巨头靠\*\*规模与成本\
 Assert '竞争策略含四项输出要求' ((Has $skill '给出 2–3 条可行策略') -and (Has $skill '为什么这条路对巨头不划算') -and (Has $skill '所需资源') -and (Has $skill '失效条件'))
 Assert '禁止只说差异化不说在哪' (Has $skill '那是空话')
 Assert '必备产出含竞争策略' (Has $skill '机会点与竞争策略（含新进入者的可行路径）')
+
+# ---------- I4. 口径分层 ----------
+Write-Host '[I4] 口径分层'
+Assert '含 3.7 口径分层节' ((Has $skill '3\.7 .{0,4}口径分层') -and (Has $skill '先判') -and (Has $skill '再决定'))
+Assert '含三种情形（分层/真冲突/同源）' ((Has $skill '口径分层（不是冲突）') -and (Has $skill '真冲突') -and (Has $skill '同源（伪独立）'))
+Assert '含三条必做动作' ((Has $skill '回溯到最早出处') -and (Has $skill '检查署名') -and (Has $skill '检查层级'))
+Assert '含实测教训（500亿 vs 173.1亿）' ((Has $skill '无任何机构署名') -and (Has $skill '无署名转引'))
+Assert '含术语禁写三条' ((Has $skill '两个冲突口径相差') -and (Has $skill '无机构署名') -and (Has $skill '不得直接跨层级比较或相减'))
 
 # ---------- J. 排版 ----------
 Write-Host '[J] 排版规范'

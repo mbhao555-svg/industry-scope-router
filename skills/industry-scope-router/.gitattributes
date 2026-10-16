@@ -1,0 +1,29 @@
+# 换行与编码策略
+#
+# 为什么 .ps1 特意不写 working-tree-encoding=UTF-8：
+#   实测（git 2.54 / Windows）——声明 working-tree-encoding 会把内容经 UTF-16 中转存入仓库，
+#   多一层转码却并不修复丢失的 BOM。而不声明时 Git 默认行为同样能完整保留 BOM。
+#   既然目的地相同，就不要引入额外的转码环节。
+#
+# BOM 的真正防线不是 Git，而是：
+#   1. verify-bom.ps1 —— 纯 ASCII 的守卫脚本，BOM 丢了也能运行，可 -Fix 一键修复
+#   2. 自检.ps1 里的 BOM 断言（163 项之一）
+#   3. CI（.github/workflows）在每次 push 时校验
+
+* text=auto eol=lf
+
+# PowerShell 脚本：强制 LF，避免与 BOM 一起产生跨平台差异
+*.ps1 text eol=lf
+
+# Markdown 与文本资源
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# 二进制与归档
+*.zip binary
+*.png binary
+*.jpg binary
+*.docx binary
+*.xlsx binary
