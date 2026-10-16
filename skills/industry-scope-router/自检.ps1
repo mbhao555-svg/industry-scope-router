@@ -76,6 +76,45 @@ foreach ($s in @('先分清：本技能不做什么','类型判定判据表','�
     Assert "含章节：$s" ((CountOf $skill ([regex]::Escape($s))) -ge 1)
 }
 
+# ---------- C. 跨文件交叉引用与语义一致性 ----------
+Write-Host '[C] 跨文件交叉引用与语义一致性'
+# 参照 industry-deep-research 的做法：不只看字样在不在，还要看跨文件是否一致、引用是否双向
+
+# --- C1 资源文件双向一致：被引用的必须存在，存在的必须被引用 ---
+$defA = Join-Path $Root 'references\行业与产业-定义.md'
+$defB = Join-Path $Root 'references\两类报告-定义.md'
+Assert '两份定义文件都存在' ((Test-Path $defA) -and (Test-Path $defB)) 'SKILL.md 引用了它们，缺一即运行期解析失败'
+$refPaths = @([regex]::Matches($skill, 'references[/\\][^\s`）】|]+?\.md') | ForEach-Object { $_.Value -replace '\\', '/' } | Sort-Object -Unique)
+Assert "SKILL.md 引用的资源文件数 >= 2（当前 $($refPaths.Count)）" ($refPaths.Count -ge 2)
+foreach ($r in $refPaths) { Assert "引用路径存在：$r" (Test-Path (Join-Path $Root ($r -replace '/', '\'))) }
+$resFiles = @(Get-ChildItem (Join-Path $Root 'references') -File -ErrorAction SilentlyContinue)
+foreach ($f in $resFiles) {
+    $rel = ($f.FullName.Replace($Root, '').TrimStart('\')) -replace '\\', '/'
+    Assert "资源文件被引用：$rel" ([bool]($refPaths -contains $rel)) '存在但从未被 SKILL.md 引用，可能是遗留文件'
+}
+
+# --- C2 跨文件语义一致性：同一判据在 SKILL 与定义文件里必须一致 ---
+$defText = (Read-Utf8 $defA) + "`n" + (Read-Utf8 $defB)
+Assert 'SKILL 与定义文件都写明两轴正交' ((Has $skill '两轴正交') -and (Has $defText '正交')) '这是最核心的定义，两处必须一致'
+Assert 'SKILL 与定义文件都声明不是包含关系' ((Has $skill '不是包含关系') -and (Has $defText '不是包含关系'))
+Assert 'SKILL 与定义文件都写明单环节没有渗透率' ((Has $skill '单环节没有渗透率') -and (Has $defText '单环节没有渗透率'))
+Assert '定义文件写明行业级数据不得用偏环节' (Has $defText '行业级数据不得直接用偏环节') '概念权威在定义文件'
+Assert 'SKILL 含概念锚点（行业/产业各自的切法）' ((Has $skill '统计分类口径') -and (Has $skill '价值流转') -and (Has $skill '有产业，无行业'))
+Assert '定义文件含核心口诀' ((Has $defText '这门生意') -and (Has $defText '这条链的位置')) '两类报告的核心区分'
+
+# --- C3 阈值类数字全库唯一（防规则被改歪）---
+$allText = $skill + "`n" + $defText
+$thWin = @([regex]::Matches($allText, '不得超\s*(\d+)\s*字符') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+Assert "引用块宽度阈值唯一（实测：$($thWin -join ' / ')）" ($thWin.Count -le 1)
+$thCell = @([regex]::Matches($allText, '单元格本身\s*>\s*(\d+)\s*字符') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+Assert "单元格宽度阈值唯一（实测：$($thCell -join ' / ')）" ($thCell.Count -le 1)
+
+# --- C4 负向一致性：禁写表之外不得出现被禁止的说法 ---
+$i34 = $skill.IndexOf('术语禁写')
+$i35 = $skill.IndexOf('过程性标注禁写')
+$outside = if ($i34 -ge 0 -and $i35 -gt $i34) { $skill.Substring(0, $i34) + $skill.Substring($i35) } else { $skill }
+Assert '禁写表之外未出现「行业产业链」' (-not (Has $outside '行业产业链'))
+Assert '禁写表之外未出现「行业的上游」' (-not (Has $outside '行业的上游'))
 # ---------- D. 三层判定判据 ----------
 Write-Host '[D] 三层判定判据'
 Assert '第一层：显式词表' ((Has $skill '第一层：显式词') -and (Has $skill '产业链、产业、供应链、价值链、上下游') -and (Has $skill '行业、行业前景、行业格局'))
@@ -96,7 +135,7 @@ Assert '纪律：不要猜' ((Has $skill '不要猜') -and (Has $skill '一次�
 
 # ---------- F. 两种报告骨架 ----------
 Write-Host '[F] 两种报告骨架'
-Assert '含行业调研报告骨架（十节 + 三附录）' ((Has $skill '3\.1 行业调研报告骨架') -and (Has $skill '三 行业阶段判定') -and (Has $skill '四 渗透率与空间') -and (Has $skill '五 竞争格局与集中度') -and (Has $skill '六 行业级壁垒与关键依赖') -and (Has $skill '七 区域分布') -and (Has $skill '十 行业级投资结论'))
+Assert '含行业调研报告骨架（十一节 + 三附录）' ((Has $skill '3\.1 行业调研报告骨架') -and (Has $skill '三 行业阶段判定') -and (Has $skill '四 渗透率与空间') -and (Has $skill '五 竞争格局与集中度') -and (Has $skill '六 行业级壁垒与关键依赖') -and (Has $skill '七 区域分布') -and (Has $skill '九 机会点、进入门槛与竞争策略') -and (Has $skill '十一 行业级投资结论'))
 Assert '含环节结构字段（11 个必填字段）' ((Has $skill '每环节结构字段') -and (Has $skill '认证与验证周期') -and (Has $skill '替代风险') -and (Has $skill '证据状态') -and (Has $skill '供需格局') -and (Has $skill '议价能力'))
 Assert '含壁垒三层判断' ((Has $skill '壁垒的三层判断') -and (Has $skill '技术层') -and (Has $skill '规模层') -and (Has $skill '认证／渠道层') -and (Has $skill '利润再厚也不可持续'))
 Assert '含国产替代字段（6 项）' ((Has $skill '国产替代字段') -and (Has $skill '卡点名称') -and (Has $skill '替代进度') -and (Has $skill '不得只说"存在卡脖子"'))
@@ -150,6 +189,24 @@ Assert '含两条归属路径并存的处置规则' ((Has $skill '两条归属�
 Assert '含归属清晰时直接产出行业报告' (Has $skill '直接产出行业报告')
 Assert '改类型情形含争议与清晰两类' ((Has $skill '归属边界有争议') -and (Has $skill '归属清晰'))
 
+# ---------- I3. 过程性标注与引用块排版 ----------
+Write-Host '[I3] 过程性标注与引用块排版'
+Assert '含过程性标注禁写清单' ((Has $skill '过程性标注禁写') -and (Has $skill '读者不需要知道') -and (Has $skill '括号里的内容如果换成'))
+Assert '禁写清单含 6 类' ((Has $skill '应纳入，但有两处边界') -and (Has $skill '必须声明') -and (Has $skill '缺一即不合格') -and (Has $skill '条件节'))
+Assert '含（推断）（估算）的规范处理' ((Has $skill '这类要保留但须规范') -and (Has $skill '不散落'))
+Assert '含元信息块必须表格化' ((Has $skill '元信息块（类型／判定依据／先决核查）必须表格化') -and (Has $skill '挤在一个引用块里 9 行'))
+Assert '含引用块宽度与行数纪律' ((Has $skill '不得超 150 字符') -and (Has $skill '引用块不超过 5 行连续') -and (Has $skill '不要一行塞多个要点') -and (Has $skill '引用块') -and (Has $skill '不享有长行豁免'))
+
+# ---------- F3. 机会点与竞争策略 ----------
+Write-Host '[F3] 机会点与竞争策略'
+Assert '含 3.1.3 机会点与竞争策略' ((Has $skill '3\.1\.3 机会点、进入门槛与竞争策略') -and (Has $skill '新进入者的竞争策略'))
+Assert '机会点表含六项字段' ((Has $skill '为什么是机会') -and (Has $skill '可投性') -and (Has $skill '当前竞争强度') -and (Has $skill '反面证据'))
+Assert '置信度四档不得自造' (Has $skill '不得自造')
+Assert '含四种竞争策略情形' ((Has $skill '巨头靠\*\*规模与成本\*\*领先') -and (Has $skill '巨头靠\*\*渠道与品牌\*\*领先') -and (Has $skill '巨头\*\*尚未覆盖\*\*的细分') -and (Has $skill '行业标准刚落地'))
+Assert '竞争策略含四项输出要求' ((Has $skill '给出 2–3 条可行策略') -and (Has $skill '为什么这条路对巨头不划算') -and (Has $skill '所需资源') -and (Has $skill '失效条件'))
+Assert '禁止只说差异化不说在哪' (Has $skill '那是空话')
+Assert '必备产出含竞争策略' (Has $skill '机会点与竞争策略（含新进入者的可行路径）')
+
 # ---------- J. 排版 ----------
 Write-Host '[J] 排版规范'
 Assert '无 HTML 换行标签残留' (-not (Has $skill '<br\s*/?>'))
@@ -186,6 +243,7 @@ if ($fail -gt 0) {
 }
 Write-Host '路由判据、两种骨架与混合声明规则均通过。' -ForegroundColor Green
 exit 0
+
 
 
 
