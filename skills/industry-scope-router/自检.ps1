@@ -168,7 +168,7 @@ Assert '含实测教训（5/6 份混合未声明）' ((Has $skill '5 份是"混�
 Assert '含混合报告判定标准' ((Has $skill '什么算"混合报告"') -and (Has $skill '同时出现'))
 Assert '含三种合规做法' ((Has $skill '纯行业报告') -and (Has $skill '纯产业链报告') -and (Has $skill '混合报告'))
 Assert '含标准声明段（可直接复制）' ((Has $skill '关于本报告两个层面判断的关系') -and (Has $skill '两者不矛盾，也不可互相推导') -and (Has $skill '渗透率校准仅适用于行业层，未跨层套用到任何环节'))
-Assert '含交稿前必查五项' ((Has $skill '交稿前必查五项') -and (Has $skill '八个禁词扫描') -and (Has $skill '网站链接总数是否 ≥ 100') -and (Has $skill '改造产线') -and (Has $skill '报告原文'))
+Assert '含交稿前必查七项' ((Has $skill '交稿前必查七项') -and (Has $skill '术语与代号说明') -and (Has $skill '六项重点方向的覆盖状态表'))
 
 # ---------- H. 边界与不重复 ----------
 Write-Host '[H] 边界与不复制判据'
@@ -239,6 +239,41 @@ Assert '覆盖度自检含链接数三项' ((Has $pb '网站链接总数是否 �
 Assert '模板含检索量字段' (Has (Read-Utf8 (Join-Path $Root 'assets\report-template.md')) '检索量（须落在 100–500）')
 Assert 'SKILL 正文含链接数门槛（交稿前必查）' ((Has $skill '网站链接总数是否 ≥ 100') -and (Has $skill '低于 100 须继续检索'))
 Assert 'SKILL 正文含检索量执行纪律' (Has $skill '检索量不得低于 100 个网站链接')
+
+# ---------- F4. 六方向覆盖度 与 术语代号说明 ----------
+Write-Host '[F4] 六方向覆盖度与术语代号说明'
+$tpl = Read-Utf8 (Join-Path $Root 'assets\report-template.md')
+$exm = Read-Utf8 (Join-Path $Root 'references\example-report.md')
+Assert 'SKILL 骨架含六方向覆盖度（两版各一处）' ((Has $skill '六项重点方向覆盖度表') -and (Has $skill '六项方向覆盖度表'))
+Assert 'SKILL 含 3.1.4 覆盖度节与 3.2.5 产业链版' ((Has $skill '3\.1\.4 六项重点方向覆盖度') -and (Has $skill '3\.2\.5 六项方向覆盖度'))
+Assert '六方向清单完整（六项全在）' ((Has $skill '市场规模') -and (Has $skill '竞争格局') -and (Has $skill '技术演进') -and (Has $skill '政策变化') -and (Has $skill '商业模式') -and (Has $skill '投融资动态'))
+Assert '写明了六方向不写成六节' (Has $skill '不是章节结构')
+Assert '未覆盖不等于已查无' ((Has $skill '未覆盖') -and (Has $skill '不得暗示'))
+Assert 'SKILL 含 3.1.5 术语与代号说明（条件必填）' ((Has $skill '3\.1\.5 术语与代号说明') -and (Has $skill '报告正文一旦使用了 M／S 代号，本节必填'))
+Assert '术语模块含 M1-M5 与 S1-S6 代号' ((Has $tpl 'M1') -and (Has $tpl 'M2') -and (Has $tpl 'M4') -and (Has $tpl 'M5') -and (Has $tpl 'S1') -and (Has $tpl 'S6'))
+Assert '术语模块写明只写用到的代号' ((Has $tpl '只写本报告实际用到的代号') -and (Has $tpl 'M3 已废止'))
+Assert '术语模块写明不是第二份权威' (Has $tpl '不是第二份权威')
+Assert '含版本修订记录模块' ((Has $tpl '版本修订记录') -and (Has $tpl '独立章节，是给读者的版本说明'))
+Assert '交稿前必查已含代号与覆盖度两项' ((Has $skill '交稿前必查七项') -and (Has $skill '术语与代号说明') -and (Has $skill '六项重点方向的覆盖状态表'))
+Assert '模板元信息含数据截止日/特别关注点/重点方向/检索量' ((Has $tpl '数据截止日') -and (Has $tpl '特别关注点') -and (Has $tpl '重点方向') -and (Has $tpl '检索量'))
+Assert '范例已含覆盖度表与元信息表' ((Has $exm '六项重点方向覆盖度') -and (Has $exm '数据截止日') -and (Has $exm '重点方向'))
+
+# ---------- I6. #### 级小节编号连续性（防累积性乱序）----------
+Write-Host '[I6] #### 级小节编号连续性'
+# ⚠️ 实测：多次插入后出现 3.1.3/3.1.4/3.1.5 排在 3.1.2 之前的乱序，而此前的 I2 只查 ## 级
+$subHeads = @([regex]::Matches($skill, '(?m)^####\s+(\d+\.\d+\.\d+)\s') | ForEach-Object { $_.Groups[1].Value })
+Assert "#### 级小节共 $($subHeads.Count) 个" ($subHeads.Count -ge 12)
+# 按父节分组，每组内末位号必须递增
+$groups = @{}
+foreach ($h in $subHeads) { $par = ($h -split '\.')[0..1] -join '.'; if (-not $groups.ContainsKey($par)) { $groups[$par] = @() }; $groups[$par] += [int](($h -split '\.')[2]) }
+$bad = @()
+foreach ($k in ($groups.Keys | Sort-Object)) {
+    $seq = $groups[$k]
+    for ($i = 1; $i -lt $seq.Count; $i++) { if ($seq[$i] -lt $seq[$i-1]) { $bad += ($k + '：' + ($seq -join '→')) ; break } }
+}
+Assert '各组 #### 小节编号不外乱序' ($bad.Count -eq 0) ($bad -join '；')
+Assert '3.1 组含 1-5 共五个小节' (($groups['3.1']).Count -eq 5)
+Assert '3.2 组含 1-5 共五个小节' (($groups['3.2']).Count -eq 5)
 
 # ---------- J. 排版 ----------
 Write-Host '[J] 排版规范'
