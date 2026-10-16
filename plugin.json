@@ -1,10 +1,38 @@
 {
-  "name": "industry-scope-router",
-  "version": "2.0.1",
-  "description": "行业调研与产业链调研的入口路由器——先判用户问的是行业还是产业链，判得出就路由，判不出先确认，再产出对应的行业调研报告或产业链调研报告。含两种报告骨架、类型判定判据表、先决条件核查（归属路径清晰度＋统计可达性）、以及混合报告必须声明两层关系的强制规则。",
-  "author": { "name": "xiaomage5558" },
-  "license": "MIT",
-  "repository": "https://github.com/mbhao555-svg/industry-scope-router",
-  "keywords": ["industry-research", "value-chain", "report-router", "investment-analysis"],
-  "skills": ["skills/industry-scope-router"]
+    "$schema":  "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+    "name":  "industry-scope-router",
+    "version":  "2.1.0",
+    "description":  "行业调研与产业链调研的入口路由器：先判用户问的是行业还是产业链，判不出就问，再按类型产出对应的报告。自足技能——内置两套报告模板、检索作战包、阶段判定与出清机制判据、来源核验、范例报告与自检工具。",
+    "author":  {
+                   "name":  "马邦皓",
+                   "email":  "mbhao555@gmail.com"
+               },
+    "repository":  "https://github.com/mbhao555-svg/industry-scope-router",
+    "homepage":  "https://github.com/mbhao555-svg/industry-scope-router",
+    "license":  "MIT",
+    "keywords":  [
+                     "industry research",
+                     "行业调研",
+                     "产业链调研",
+                     "调研路由",
+                     "投资分析",
+                     "报告模板",
+                     "行业与产业"
+                 ],
+    "skills":  "./skills",
+    "extensions":  {
+                       "com.openai":  {
+                                          "interface":  {
+                                                            "developerName":  "马邦皓",
+                                                            "displayName":  "Industry Scope Router",
+                                                            "capabilities":  [
+
+                                                                             ],
+                                                            "longDescription":  "先判断调研层面（行业或产业链），再产出对应报告。内置行业调研报告（11 节）与产业链调研报告（11 节）两套骨架；含四步先决条件核查（归属路径清晰度＋统计可达性）、五指标＋渗透率校准的阶段判定、逐环节出清机制、机会点与竞争策略；并强制要求混合报告声明两层关系。检索量要求 100–500 个网站链接，低于下限不得交稿。",
+                                                            "shortDescription":  "行业/产业链调研路由器",
+                                                            "defaultPrompt":  "先判断我该做行业调研还是产业链调研，然后按对应骨架产出一份含投资判断的报告。",
+                                                            "category":  "Research"
+                                                        }
+                                      }
+                   }
 }

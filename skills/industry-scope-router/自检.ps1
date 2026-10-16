@@ -72,7 +72,7 @@ if ($fm.Success) {
 
 # ---------- C. 章节完整性 ----------
 Write-Host '[C] 章节完整性'
-foreach ($s in @('先分清：本技能不做什么','类型判定判据表','两种报告的结构骨架','术语禁写','强制规则：两层判断混用时必须声明','执行流程','输出格式','边界')) {
+foreach ($s in @('先分清：本技能与其他技能的关系','本技能自带的资源','类型判定判据表','两种报告的结构骨架','强制规则：两层判断混用时必须声明','执行流程','输出格式','边界')) {
     Assert "含章节：$s" ((CountOf $skill ([regex]::Escape($s))) -ge 1)
 }
 
@@ -168,11 +168,11 @@ Assert '含实测教训（5/6 份混合未声明）' ((Has $skill '5 份是"混�
 Assert '含混合报告判定标准' ((Has $skill '什么算"混合报告"') -and (Has $skill '同时出现'))
 Assert '含三种合规做法' ((Has $skill '纯行业报告') -and (Has $skill '纯产业链报告') -and (Has $skill '混合报告'))
 Assert '含标准声明段（可直接复制）' ((Has $skill '关于本报告两个层面判断的关系') -and (Has $skill '两者不矛盾，也不可互相推导') -and (Has $skill '渗透率校准仅适用于行业层，未跨层套用到任何环节'))
-Assert '含交稿前必查三项' ((Has $skill '交稿前必查三项') -and (Has $skill '类型明确吗') -and (Has $skill '把行业数据用到环节结论'))
+Assert '含交稿前必查五项' ((Has $skill '交稿前必查五项') -and (Has $skill '八个禁词扫描') -and (Has $skill '网站链接总数是否 ≥ 100') -and (Has $skill '改造产线') -and (Has $skill '报告原文'))
 
 # ---------- H. 边界与不重复 ----------
 Write-Host '[H] 边界与不复制判据'
-Assert '声明不复制判据' ((Has $skill '本技能不复制第三份') -and (Has $skill '不复制判据'))
+Assert '声明不复制第三份判据（本技能自足）' ((Has $skill '本技能是自足的') -and (Has $skill '判据不复制第三份') -and (Has $skill '运行时不需要安装任何其他技能'))
 Assert '指向判据所在技能' ((Has $skill 'industry-report-structure') -and (Has $skill 'industry-deep-research') -and (Has $skill 'industry-lifecycle-analyzer'))
 Assert '声明两份定义权威' ((Has $skill '行业与产业-定义') -and (Has $skill '两类报告-定义') -and (Has $skill '以定义文件为准'))
 Assert '输出结尾声明义务' ((Has $skill '本次调研的\*\*类型选择依据\*\*'))
@@ -225,6 +225,20 @@ Assert '含三种情形（分层/真冲突/同源）' ((Has $skill '口径分层
 Assert '含三条必做动作' ((Has $skill '回溯到最早出处') -and (Has $skill '检查署名') -and (Has $skill '检查层级'))
 Assert '含实测教训（500亿 vs 173.1亿）' ((Has $skill '无任何机构署名') -and (Has $skill '无署名转引'))
 Assert '含术语禁写三条' ((Has $skill '两个冲突口径相差') -and (Has $skill '无机构署名') -and (Has $skill '不得直接跨层级比较或相减'))
+
+# ---------- I5. 检索量底线（100-500 链接）----------
+Write-Host '[I5] 检索量底线'
+# ⚠️ 详细条款写在 references/检索作战包.md（规则单一权威）；SKILL.md 只放指针与交稿前门槛
+$pb = Read-Utf8 (Join-Path $Root 'references\检索作战包.md')
+Assert '含检索量硬性区间 100-500' ((Has $pb '最少 100 个网站链接') -and (Has $pb '下限 100 个，上限 500 个'))
+Assert '含计数口径与配比要求' ((Has $pb '每条实际打开或读取过的 URL 计 1 个') -and (Has $pb '至少 40 个必须 web_fetch') -and (Has $pb '至少 20 个为一手来源'))
+Assert '含低于下限的后果' (Has $pb '低于 100 个链接的后果')
+Assert '含分工检索按路数摊派' (Has $pb '每路至少要 25 个链接')
+Assert '含链接数台账（4 类）' ((Has $pb '链接数台账') -and (Has $pb 'web_search 返回并实际查看的来源页') -and (Has $pb '官方接口调用') -and (Has $pb '合计（去重后）'))
+Assert '覆盖度自检含链接数三项' ((Has $pb '网站链接总数是否 ≥ 100') -and (Has $pb 'web_fetch 打开原文是否 ≥ 40 个') -and (Has $pb '一手来源是否 ≥ 20 个'))
+Assert '模板含检索量字段' (Has (Read-Utf8 (Join-Path $Root 'assets\report-template.md')) '检索量（须落在 100–500）')
+Assert 'SKILL 正文含链接数门槛（交稿前必查）' ((Has $skill '网站链接总数是否 ≥ 100') -and (Has $skill '低于 100 须继续检索'))
+Assert 'SKILL 正文含检索量执行纪律' (Has $skill '检索量不得低于 100 个网站链接')
 
 # ---------- J. 排版 ----------
 Write-Host '[J] 排版规范'

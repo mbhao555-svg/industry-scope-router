@@ -47,9 +47,98 @@
 | `references/检索作战包.md` | **检索深度要求、缺口驱动补检索法、官方接口、两类型检索方向清单** |
 | `assets/report-template.md` | **两套报告模板** + 通用纪律（排版、禁词、口径、过程性标注） |
 | `references/example-report.md` | 完整范例（虾滑行业调研） |
-| `自检.ps1` | **152 项断言** |
+| `自检.ps1` | **163 项断言** |
 | `verify-bom.ps1` | BOM/EOL 守卫 |
 | `单文件通用版提示词.md` | 给不加载技能的场景用 |
+
+## 安装
+
+### 一、DeepSeek Harness（DSH）
+
+```bash
+git clone --depth 1 https://github.com/mbhao555-svg/industry-scope-router.git /tmp/isr \
+  && cp -r /tmp/isr/skills/industry-scope-router ~/.dsh/skills/ \
+  && rm -rf /tmp/isr
+```
+
+```powershell
+# Windows PowerShell
+$Stage = Join-Path $env:TEMP ("isr-" + [guid]::NewGuid().ToString("N").Substring(0,8))
+git clone --depth 1 https://github.com/mbhao555-svg/industry-scope-router.git (Join-Path $Stage "repo")
+$dst = Join-Path $env:USERPROFILE ".dsh\skills\industry-scope-router"
+if (Test-Path $dst) { Write-Warning "已存在，跳过（不覆盖）: $dst" }
+else { Copy-Item (Join-Path $Stage "repo\skills\industry-scope-router") $dst -Recurse }
+Remove-Item $Stage -Recurse -Force
+```
+
+**不用重启、不用新开会话**——DSH 会热刷新技能目录。
+
+### 二、Codex
+
+**方式 A：插件包（推荐）**
+
+本仓库符合 [agent-plugins.org](https://agent-plugins.org) 规范，仓库根带 `.codex-plugin/plugin.json`。
+
+```bash
+git clone --depth 1 https://github.com/mbhao555-svg/industry-scope-router.git
+# 然后在 Codex 里：导入插件 → 选择刚 clone 下来的目录
+```
+
+清单里的 `"skills": "./skills"` 会自动指向技能目录。
+
+**方式 B：CLI 一条命令**
+
+```bash
+npx skills add mbhao555-svg/industry-scope-router --skill industry-scope-router -g -a codex -y
+```
+
+### 三、WorkBuddy
+
+**方式 A：插件包（推荐）**
+
+仓库根带 `.codebuddy-plugin/plugin.json`（WorkBuddy 与 CodeBuddy 共用这一渠道）。在 WorkBuddy 的插件导入界面选择仓库目录或打包 zip 即可。
+
+**方式 B：CLI**
+
+```bash
+npx skills add mbhao555-svg/industry-scope-router --skill industry-scope-router -g -a codebuddy -y
+```
+
+> 装到 `.codebuddy/skills/`。**DSH 不扫描该目录**——DSH 用户请用方式一。
+
+**一次装多个平台**：`-a codex -a codebuddy` 可同时装。
+
+### 四、三份清单对照
+
+| 清单文件 | 面向平台 | 备注 |
+|---|---|---|
+| `plugin.json` | agent-plugins.org 规范 / **ChatGPT** | 含 `com.openai` 界面扩展：显示名、分类、默认提示词 |
+| `.codex-plugin/plugin.json` | **Codex** | — |
+| `.codebuddy-plugin/plugin.json` | **WorkBuddy** / **CodeBuddy** | 含 `category` 字段 |
+
+> ⚠️ **打包时的结构要求**：三份清单与 `skills/` 必须**在同一层**（都在包根）。若把清单放进技能目录内，`"./skills"` 会指错位置，**插件无法加载技能**。
+>
+> ⚠️ **DSH 用户不必用插件包**——DSH 的插件系统是另一套体系（Cordis / npm），**不读取上述清单**。DSH 请用方式一。
+
+### 五、不装任何工具（任意联网 AI）
+
+打开 [`skills/industry-scope-router/单文件通用版提示词.md`](skills/industry-scope-router/单文件通用版提示词.md)，点 **Raw** 后整段复制，粘进 ChatGPT / Claude / Kimi / Gemini 等**支持联网搜索**的 AI 即可。
+
+## 安装后验证
+
+装完请确认技能**出现在你的 AI 工具的技能列表里**，而不只是命令回了成功。
+
+如果命令提示成功但列表里没有——多半是文件没放对位置。检查 `<技能目录>/industry-scope-router/SKILL.md` 是否存在。
+
+**技能目录里应当有这些**（缺任一即不完整）：
+
+| 项 | 说明 |
+|---|---|
+| `SKILL.md` | 技能主体 |
+| `自检.ps1` / `verify-bom.ps1` | 163 项自检 / BOM-EOL 守卫 |
+| `assets/report-template.md` | 两套报告模板 |
+| `references/` 7 个文件 | 定义 ×2、阶段判定、产业链与出清、来源核验、检索作战包、范例报告 |
+| `使用说明.md` / `单文件通用版提示词.md` / `发布到GitHub.md` | 使用与发布 |
 
 ## 三条硬规则
 
@@ -66,7 +155,7 @@
 
 ## 版本
 
-`2.0.0`　｜　更新日志见 `CHANGELOG.md`　｜　`version-check.ps1` 校验三处版本一致（含远程 tag）
+`2.1.0`　｜　更新日志见 `CHANGELOG.md`　｜　`version-check.ps1` 校验三处版本一致（含远程 tag）
 
 ## 许可
 
