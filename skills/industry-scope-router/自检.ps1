@@ -275,6 +275,9 @@ Assert '各组 #### 小节编号不外乱序' ($bad.Count -eq 0) ($bad -join '�
 Assert '3.1 组含 1-5 共五个小节' (($groups['3.1']).Count -eq 5)
 Assert '3.2 组含 1-5 共五个小节' (($groups['3.2']).Count -eq 5)
 
+Assert '过程性标注禁写含两处合法用法排除' ((Has $skill '两处会误报的合法用法') -and (Has $skill '元信息是在描述报告本身') -and (Has $skill '本报告采用 X 口径'))
+Assert '模板同步含排除规则与区分点' ((Has (Read-Utf8 (Join-Path $Root 'assets\report-template.md')) '两处合法用法不算过程性标注') -and (Has (Read-Utf8 (Join-Path $Root 'assets\report-template.md')) '报告是什么／采用什么口径'))
+
 # ---------- J. 排版 ----------
 Write-Host '[J] 排版规范'
 Assert '无 HTML 换行标签残留' (-not (Has $skill '<br\s*/?>'))
