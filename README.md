@@ -155,7 +155,7 @@ npx skills add mbhao555-svg/industry-scope-router --skill industry-scope-router 
 
 ## 版本
 
-`2.2.1`　｜　更新日志见 `CHANGELOG.md`　｜　`version-check.ps1` 校验三处版本一致（含远程 tag）
+`2.3.0`　｜　更新日志见 `CHANGELOG.md`　｜　`version-check.ps1` 校验三处版本一致（含远程 tag）
 
 ## 许可
 

@@ -278,6 +278,48 @@ Assert '3.2 组含 1-5 共五个小节' (($groups['3.2']).Count -eq 5)
 Assert '过程性标注禁写含两处合法用法排除' ((Has $skill '两处会误报的合法用法') -and (Has $skill '元信息是在描述报告本身') -and (Has $skill '本报告采用 X 口径'))
 Assert '模板同步含排除规则与区分点' ((Has (Read-Utf8 (Join-Path $Root 'assets\report-template.md')) '两处合法用法不算过程性标注') -and (Has (Read-Utf8 (Join-Path $Root 'assets\report-template.md')) '报告是什么／采用什么口径'))
 
+# ---------- J2. 吸收项：底数路线图 / 体量门槛 / 正文状态 / 参数分级 / 渗透率口径 ----------
+Write-Host '[J2] 底数·体量·正文状态·参数分级·渗透率口径'
+$tpl2 = Read-Utf8 (Join-Path $Root 'assets\report-template.md')
+$base2 = Read-Utf8 (Join-Path $Root 'references\统计底数路线图.md')
+
+# 1 统计底数路线图
+Assert '含统计底数路线图资源' (Test-Path (Join-Path $Root 'references\统计底数路线图.md'))
+Assert '资源清单已登记底数路线图' (Has $skill '统计底数路线图')
+Assert '底数含八类（居民/企业/行业代码/海关/数字产业/财政采购/机构保有量/区域集群）' ((Has $base2 '居民与消费') -and (Has $base2 '企业与生产经营') -and (Has $base2 '行业代码与统计口径') -and (Has $base2 '进出口与海关') -and (Has $base2 '信息技术与数字产业') -and (Has $base2 '公共资金与采购') -and (Has $base2 '机构与设施保有量') -and (Has $base2 '区域与集群'))
+Assert '底数含真实政府入口' ((Has $base2 'stats.gov.cn') -and (Has $base2 'miit.gov.cn') -and (Has $base2 'customs.gov.cn') -and (Has $base2 'mof.gov.cn'))
+Assert '底数含口径提醒与四条红线' ((Has $base2 '口径提醒') -and (Has $base2 '四条红线') -and (Has $base2 '不得用"权威基数 × 自估占比"的结果冒充权威统计'))
+Assert '底数声明只记路线不固值' ((Has $base2 '不固值') -and (Has $base2 '不代表已下载各年明细'))
+
+# 2 正文体量门槛
+Assert 'SKILL 含正文体量门槛' ((Has $skill '6.4.1 正文体量门槛') -and (Has $skill '8,000–15,000') -and (Has $skill '12,000–20,000'))
+Assert '体量门槛含±10%偏差规则' ((Has $skill '差距 ≤10%') -and (Has $skill '>10%') -and (Has $skill '不得作为完整报告交付'))
+Assert '体量门槛声明不是写作配额' ((Has $skill '不得为贴线补字') -and (Has $skill '不是写作配额'))
+Assert '模板含三档报告模式' ((Has $tpl2 '完整专项报告') -and (Has $tpl2 '有限披露报告') -and (Has $tpl2 '局部答复'))
+Assert '含可执行的体量测量脚本' (Test-Path (Join-Path $Root 'count-body.ps1'))
+Assert '测量脚本声明计数口径' ((Has (Read-Utf8 (Join-Path $Root 'count-body.ps1')) '计入：') -and (Has (Read-Utf8 (Join-Path $Root 'count-body.ps1')) '不计入：'))
+Assert '方法与数据来源说明含正文实测字数' ((Has $tpl2 '正文实测字数') -and (Has $tpl2 '不含附录与本节'))
+
+# 3 材料正文状态四档
+Assert 'SKILL 含正文状态四档' ((Has $skill '6.4.2 材料"正文状态"四档') -and (Has $skill '仅摘要') -and (Has $skill '仅元数据'))
+Assert '正文状态含禁用规则' ((Has $skill '禁止用搜索摘要冒充已读原文') -and (Has $skill '不得作为关键结论的唯一依据'))
+Assert '模板含正文状态四档表' ((Has $tpl2 '材料「正文状态」四档') -and (Has $tpl2 '只能作线索'))
+
+# 4 参数六分类与精度
+Assert 'SKILL 含参数六分类' ((Has $skill '3.8.1 参数六分类') -and (Has $skill '观测') -and (Has $skill '换算') -and (Has $skill '代理') -and (Has $skill '待核实'))
+Assert '含最弱参数约束精度' ((Has $skill '有效位数不超过链条上最弱的那个参数') -and (Has $skill '展示值与计算值分开'))
+Assert '含本轮结果不得充当本轮输入' (Has $skill '本轮计算结果不得反过来充当本轮输入证据')
+Assert '模板含模块三参数登记表' ((Has $tpl2 '模块三：参数登记表') -and (Has $tpl2 '来源原值→必要换算→模型参数') -and (Has $tpl2 '不确定性/替换计划'))
+
+# 5 渗透率存量/流量
+Assert 'SKILL 含渗透率存量流量区分' ((Has $skill '3.8.3 渗透率必须先分清') -and (Has $skill '存量渗透率') -and (Has $skill '本期采用率'))
+Assert '含存量当流量的错误警告' (Has $skill '用存量渗透率去算本期新增，会把历年累计的采购都算进本期')
+Assert '含客户数与金额不可互还原' (Has $skill '客户数与金额不能在同一条式子中互相还原')
+Assert '模板渗透率表含口径先判行' (Has $tpl2 '口径先判')
+
+# 6 边界表述已更新为自足
+Assert '七、边界已改为自足表述' ((Has $skill '判据已内置') -and (-not (Has $skill '本技能不联网')))
+
 # ---------- J. 排版 ----------
 Write-Host '[J] 排版规范'
 Assert '无 HTML 换行标签残留' (-not (Has $skill '<br\s*/?>'))
