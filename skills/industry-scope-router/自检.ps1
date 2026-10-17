@@ -320,6 +320,42 @@ Assert '模板渗透率表含口径先判行' (Has $tpl2 '口径先判')
 # 6 边界表述已更新为自足
 Assert '七、边界已改为自足表述' ((Has $skill '判据已内置') -and (-not (Has $skill '本技能不联网')))
 
+# ---------- J3. 搜索方法：关键词构造与渠道匹配 ----------
+Write-Host '[J3] 关键词构造与渠道匹配'
+$pkg3 = Read-Utf8 (Join-Path $Root 'references\检索作战包.md')
+Assert '含关键词四槽组合公式' ((Has $pkg3 '关键词四槽组合公式') -and (Has $pkg3 '【对象名称】＋【业务/指标】＋【地域】＋【时间】'))
+Assert '含六维扩展（中英名/简称/旧称/同义词/上下位）' ((Has $pkg3 '六维扩展') -and (Has $pkg3 '中文全称') -and (Has $pkg3 '英文名') -and (Has $pkg3 '简称') -and (Has $pkg3 '旧称') -and (Has $pkg3 '同义词') -and (Has $pkg3 '上下位概念'))
+Assert '含反模式禁令（不得把分析维度当检索词）' ((Has $pkg3 '反模式：不得把「分析维度」直接转成「必搜词」') -and (Has $pkg3 '是你脑子里的分类，不是世界上的词'))
+Assert '含材料类型→渠道匹配表' ((Has $pkg3 '材料类型 → 渠道匹配表') -and (Has $pkg3 '官方统计（量、额、企业数、产能利用率）') -and (Has $pkg3 '海关与进出口') -and (Has $pkg3 '公司披露') -and (Has $pkg3 '破产/退出'))
+Assert '含 PEST 四维分渠道' ((Has $pkg3 'PEST 四维的分渠道优先') -and (Has $pkg3 'P 政治政策') -and (Has $pkg3 'T 技术'))
+Assert '含专项检索方向库五类' ((Has $pkg3 '专项检索方向库') -and (Has $pkg3 '产业链／环节关系') -and (Has $pkg3 '行业痛点') -and (Has $pkg3 '驱动力') -and (Has $pkg3 '投资逻辑') -and (Has $pkg3 '竞品与份额'))
+Assert '含痛点六向与驱动力五向' ((Has $pkg3 '承担者／任务／损失／现有替代／失败／放弃') -and (Has $pkg3 '目标行业结果／候选原因／时滞／反例／替代解释'))
+Assert '含投资逻辑论点卡' (Has $pkg3 '论点｜关键变量｜支持与反证材料｜能区分两种解释的证据｜对选择的影响')
+Assert '含终端销售客户库存复购示例' (Has $pkg3 '终端销售、客户库存、复购')
+Assert '含分部财务官方接口与毛利率字段陷阱' ((Has $pkg3 'GROSS_RPOFIT_RATIO') -and (Has $pkg3 '写成') -and (Has $pkg3 'GROSS_PROFIT_RATIO') -and (Has $pkg3 '取不到值') -and (Has $pkg3 '跨维度相加会放大 2–3 倍'))
+Assert '含失败渠道记录（已安装≠调用成功）' ((Has $pkg3 '失败渠道必须记录') -and (Has $pkg3 '本次实际调用成功') -and (Has $pkg3 '不得因一次失败就写'))
+Assert '含独立性判定与角色混淆' ((Has $pkg3 '独立性判定（防') -and (Has $pkg3 '伪双源') -and (Has $pkg3 '设备生产者、使用者、经销商、维修商'))
+Assert '含 arXiv 强制与财务结构化工具' ((Has $pkg3 'arXiv 网站或 API（涉学术/算法/AI/前沿技术时必查）') -and (Has $pkg3 'OpenBB / EdgarTools / FinanceToolkit'))
+Assert '含材料词库（量值/价格/主体/技术/政策）' ((Has $pkg3 '材料词库') -and (Has $pkg3 '量值类') -and (Has $pkg3 '价格类') -and (Has $pkg3 '技术与标准类'))
+Assert '材料词库含虾滑别这样搜/这样搜对照' ((Has $pkg3 '别这样搜') -and (Has $pkg3 '这样搜'))
+Assert '旧「六方向查询模板」已被材料词库取代（消除自相矛盾）' (-not (Has $pkg3 '六方向查询模板'))
+Assert '1.5 官方数据接口已去重（不再重复出现）' (([regex]::Matches($pkg3, '### 1\.5 官方数据接口')).Count -eq 0)
+Assert 'SKILL 资源清单已写明检索方法要点' ((Has $skill '关键词四槽组合＋六维扩展') -and (Has $skill '材料类型→渠道匹配表'))
+Assert 'SKILL 执行流程已按六步引导检索' ((Has $skill '1.5.1 四槽组合') -and (Has $skill '1.5.4 按材料类型匹配渠道') -and (Has $skill '1.5.5 按对象类型选检索方向库'))
+
+# ---------- J4. HTML 阅读版 ----------
+Write-Host '[J4] HTML 阅读版'
+Assert '含可执行的 HTML 构建脚本' (Test-Path (Join-Path $Root 'build-html.py'))
+$html = Read-Utf8 (Join-Path $Root 'build-html.py')
+Assert 'HTML 脚本自带校验（重复锚点/失效锚点/空表格）' ((Has $html '重复锚点') -and (Has $html '失效目录锚点') -and (Has $html '空表格'))
+Assert 'HTML 自包含（无 CDN/外链）' ((Has $html '无 CDN') -and (-not (Has $html 'cdn.jsdelivr')) -and (-not (Has $html 'googleapis')))
+Assert 'HTML 含打印样式与窄屏适配' ((Has $html '@media print') -and (Has $html 'max-width:640px'))
+Assert 'HTML 剥离重复 H1' (Has $html 'strip_leading_h1')
+Assert 'SKILL 含 6.5 HTML 交付规范' ((Has $skill '6.5 HTML 阅读版') -and (Has $skill '渲染未验证'))
+Assert '交付物表已含 HTML 阅读版' ((Has $skill 'HTML 阅读版') -and (Has $skill '6.5'))
+Assert '资源清单已登记 build-html.py' (Has $skill 'build-html.py')
+Assert '明确不生成 Excel 可复算模型' (Has $skill '不生成 Excel')
+
 # ---------- J. 排版 ----------
 Write-Host '[J] 排版规范'
 Assert '无 HTML 换行标签残留' (-not (Has $skill '<br\s*/?>'))
