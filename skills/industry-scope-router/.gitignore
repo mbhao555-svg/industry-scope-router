@@ -13,3 +13,5 @@ desktop.ini
 # 临时文件
 *.tmp
 ~$*
+__pycache__/
+*.pyc
