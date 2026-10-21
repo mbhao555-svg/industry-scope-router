@@ -108,7 +108,36 @@ npx skills add mbhao555-svg/industry-scope-router --skill industry-scope-router 
 
 **一次装多个平台**：`-a codex -a codebuddy` 可同时装。
 
-### 四、三份清单对照
+### 四、TRAE（**需要根级 SKILL.md**）
+
+TRAE 的包格式要求是：**`zip` 或 `.skill` 文件，且压缩包内有根级 `SKILL.md`，其 YAML frontmatter 含 `name` 与 `description`**。
+否则会报 `Invalid skill package: SKILL.md not found`。
+
+**本仓库已满足该要求**——根目录有一份 `SKILL.md`（由 `skills/industry-scope-router/SKILL.md` 镜像而来，见下方说明）。
+
+**方式 A：仓库打包（最简单）**
+
+在 GitHub 页面点 **Code → Download ZIP**，得到 `industry-scope-router-main.zip`，**直接喂给 TRAE 即可**（根级 `SKILL.md` 在包内）。
+
+**方式 B：本地生成带版本号的包**
+
+```powershell
+cd industry-scope-router
+.\sync-root.ps1          # 确保根目录镜像是最新的
+.\build-package.ps1      # 产出 industry-scope-router-v2.4.2.zip 与 .skill
+```
+
+`build-package.ps1` 会在打包**之前**校验根级 `SKILL.md` 的 frontmatter，不合规就拒绝出包——**避免再出现"打完包才发现装不上"**。
+
+> ⚠️ **`.skill` 与 `.zip` 内容完全相同**，只是扩展名不同（供只认 `.skill` 的界面用）。
+>
+> ⚠️ **为什么仓库里有两份 SKILL.md**：agent-plugins / Codex / WorkBuddy / `npx skills` 要求 `skills/<name>/SKILL.md`；TRAE 要求根级 `SKILL.md`。两种布局无法共存于同一位置，故：
+> - `skills/industry-scope-router/` = **权威源**
+> - 仓库根 = **生成镜像**（`sync-root.ps1` 生成）
+>
+> **两者必须逐文件一致**，`version-check.ps1` 会校验（含根级 frontmatter 合规性）。改技能内容后请跑一次 `.\sync-root.ps1`。
+
+### 五、三份清单对照
 
 | 清单文件 | 面向平台 | 备注 |
 |---|---|---|
@@ -120,7 +149,7 @@ npx skills add mbhao555-svg/industry-scope-router --skill industry-scope-router 
 >
 > ⚠️ **DSH 用户不必用插件包**——DSH 的插件系统是另一套体系（Cordis / npm），**不读取上述清单**。DSH 请用方式一。
 
-### 五、不装任何工具（任意联网 AI）
+### 六、不装任何工具（任意联网 AI）
 
 打开 [`skills/industry-scope-router/单文件通用版提示词.md`](skills/industry-scope-router/单文件通用版提示词.md)，点 **Raw** 后整段复制，粘进 ChatGPT / Claude / Kimi / Gemini 等**支持联网搜索**的 AI 即可。
 
@@ -155,7 +184,7 @@ npx skills add mbhao555-svg/industry-scope-router --skill industry-scope-router 
 
 ## 版本
 
-`2.4.1`　｜　更新日志见 `CHANGELOG.md`　｜　`version-check.ps1` 校验三处版本一致（含远程 tag）
+`2.4.2`　｜　更新日志见 `CHANGELOG.md`　｜　`version-check.ps1` 校验三处版本一致（含远程 tag）
 
 ## 许可
 

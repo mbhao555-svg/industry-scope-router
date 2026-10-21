@@ -75,6 +75,53 @@ if ($gitOk -and -not $SkipRemote) {
 Pop-Location
 
 Write-Host ''
+Write-Host '=== 5. 根目录镜像（TRAE 需要根级 SKILL.md）==='
+# 根目录是 skills/industry-scope-router/ 的生成镜像；两者必须逐文件一致，否则会漂移
+$srcSkill = Join-Path $Root 'skills\industry-scope-router'
+$mirrorItems = @('SKILL.md','assets','references','build-html.py','count-body.ps1','verify-bom.ps1','自检.ps1')
+$mirrorFiles = @()
+foreach ($it in $mirrorItems) {
+    $p = Join-Path $srcSkill $it
+    if (-not (Test-Path $p)) { $problems += "镜像源缺失：$it"; continue }
+    if ((Get-Item $p).PSIsContainer) {
+        Get-ChildItem $p -Recurse -File | ForEach-Object { $mirrorFiles += $_.FullName.Substring($srcSkill.Length + 1) }
+    } else { $mirrorFiles += $it }
+}
+$mirrorBad = @()
+foreach ($f in ($mirrorFiles | Sort-Object -Unique)) {
+    $a = Join-Path $srcSkill $f
+    $b = Join-Path $Root $f
+    if (-not (Test-Path $b)) { $mirrorBad += "根目录缺 $f"; continue }
+    if ((Get-FileHash $a -Algorithm MD5).Hash -ne (Get-FileHash $b -Algorithm MD5).Hash) { $mirrorBad += "内容不同 $f" }
+}
+if ($mirrorBad.Count) {
+    $problems += "根目录镜像与 skills/ 不一致（$($mirrorBad.Count) 个）：$($mirrorBad -join '；')"
+} else {
+    Write-Host ("  OK 根目录镜像一致（{0} 个文件）" -f @($mirrorFiles | Sort-Object -Unique).Count)
+}
+
+# 根级 SKILL.md 必须是 TRAE 可识别的 YAML frontmatter
+$rootSkill = Join-Path $Root 'SKILL.md'
+if (-not (Test-Path $rootSkill)) { $problems += '根级 SKILL.md 缺失（TRAE 会报 SKILL.md not found）' }
+else {
+    $rl = [System.IO.File]::ReadAllLines($rootSkill, [System.Text.UTF8Encoding]::new($false))
+    $fmOk = $rl.Count -gt 3 -and $rl[0].Trim() -eq '---'
+    $hasName = $false; $hasDesc = $false; $closed = $false
+    if ($fmOk) {
+        for ($i = 1; $i -lt [Math]::Min(40, $rl.Count); $i++) {
+            if ($rl[$i].Trim() -eq '---') { $closed = $true; break }
+            if ($rl[$i] -match '^name:\s*\S') { $hasName = $true }
+            if ($rl[$i] -match '^description:') { $hasDesc = $true }
+        }
+    }
+    if (-not ($fmOk -and $hasName -and $hasDesc -and $closed)) {
+        $problems += '根级 SKILL.md 的 frontmatter 不合规（需 --- 包裹，且含 name 与 description）'
+    } else {
+        Write-Host '  OK 根级 SKILL.md frontmatter 合规（TRAE 可识别）'
+    }
+}
+
+Write-Host ''
 foreach ($w in $warnings) { Write-Host "WARN: $w" -ForegroundColor Yellow }
 if ($problems.Count) {
     Write-Host 'RESULT: version mismatch' -ForegroundColor Red

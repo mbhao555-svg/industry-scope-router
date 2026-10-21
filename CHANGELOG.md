@@ -4,6 +4,46 @@
 
 ---
 
+## [2.4.2] — 2026-10-17
+
+**主题：支持 TRAE 安装（根级 SKILL.md）**
+
+### 问题
+TRAE 的包格式要求是「**包含根级 `SKILL.md` 的 zip 或 `.skill` 文件**，且 `SKILL.md` 内要有 YAML 格式的 `name` 与 `description`」。
+本仓库此前把 `SKILL.md` 放在 `skills/industry-scope-router/` 下（这是 agent-plugins / Codex / WorkBuddy / `npx skills` 要求的布局），**根目录没有 `SKILL.md`**，因此 TRAE 报：
+
+```
+Invalid skill package: SKILL.md not found
+```
+
+### 冲突本质
+两种布局**无法共存于同一位置**：
+
+| 渠道 | 要求 |
+|---|---|
+| agent-plugins / Codex / WorkBuddy / `npx skills` | `skills/<name>/SKILL.md` |
+| **TRAE** | **根级 `SKILL.md`** |
+
+### 修正
+1. **根目录生成镜像**：`SKILL.md` / `references/` / `assets/` / 四个脚本（共 14 个文件），由新增的 **`sync-root.ps1`** 从 `skills/industry-scope-router/` 生成
+2. **权威源不变**：`skills/industry-scope-router/` 仍是唯一权威，根目录是**生成物**
+3. **防漂移**：`version-check.ps1` 新增第 5 段校验——① 根目录镜像与 `skills/` **逐文件 MD5 一致** ② **根级 `SKILL.md` 的 frontmatter 合规**（`---` 包裹 + 含 `name` + 含 `description`）
+4. **新增 `build-package.ps1`**：产出 `industry-scope-router-v{版本}.zip` 与 `.skill`，**打包前先校验 frontmatter**，不合规拒绝出包
+5. **README 新增「四、TRAE」安装节**，含 `Code → Download ZIP` 与本地打包两种方式
+
+### 验证（三项故障注入全部被抓到）
+
+| 注入 | `version-check.ps1` 反应 |
+|---|---|
+| 改坏根级 `SKILL.md` 内容 | ✅ `根目录镜像与 skills/ 不一致（1 个）：内容不同 SKILL.md` |
+| **删掉根级 `SKILL.md`**（即 TRAE 报错的场景） | ✅ `根级 SKILL.md 缺失（TRAE 会报 SKILL.md not found）` |
+| 把 `name:` 改成 `title:` | ✅ `根级 SKILL.md 的 frontmatter 不合规` |
+
+**打包模拟**：按 GitHub Download ZIP 的方式打包后，zip 内**根级 `SKILL.md` 命中 1 个**，frontmatter 解析出 `name=industry-scope-router`、`description=…` → **TRAE 校验应通过**。
+
+**根级脚本可用性**：从根目录跑 `自检.ps1` 仍 **248 项全绿**；`count-body.ps1`、`build-html.py` 均正常。
+
+---
 ## [2.4.1] — 2026-10-17
 
 **主题：补齐 v2.4.0 之后的未版本化提交（.gitignore 忽略 `__pycache__`）**
